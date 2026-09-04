@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>空白換行轉換器｜Facebook・IG・Threads 貼文空白行工具</title>
+  <meta name="description" content="免費空白換行轉換器，在空白行加入零寬度字元，避免 Facebook、Instagram、Threads 貼文換行被壓縮。免登入、文字不上傳、支援 PWA 離線使用。" />
+  <meta name="theme-color" content="#111827" />
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/pwa-192.png" />
+  <link rel="stylesheet" href="src/styles/globals.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header__brand">
+        <span class="header__logo" aria-hidden="true">⌁</span>
+        <span class="header__title">空白換行轉換器</span>
+      </div>
+      <div class="header__actions">
+        <span id="offlineBadge" class="badge badge--offline" hidden>● 離線模式</span>
+        <button id="installBtn" class="btn btn--ghost" hidden>安裝 App</button>
+        <button id="helpBtn" class="btn btn--ghost" aria-controls="faq" aria-expanded="false">說明</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1 class="hero__title">讓社群貼文的空白行，不再被吃掉。</h1>
+      <p class="hero__subtitle">貼上文字，一鍵加入隱形空白字元。Facebook、Instagram、Threads 貼文排版更乾淨。</p>
+      <p class="hero__trust">🔒 文字只在你的裝置內處理，不會上傳伺服器。</p>
+    </section>
+
+    <main class="tool-layout">
+      <section class="panel input-panel" aria-labelledby="inputLabel">
+        <div class="panel__head">
+          <label id="inputLabel" for="inputText" class="panel__label">原始文字</label>
+        </div>
+
+        <p id="onboarding" class="onboarding">
+          1. 貼上貼文　2. 按「立即轉換」　3. 複製結果
+        </p>
+
+        <textarea
+          id="inputText"
+          class="textarea"
+          placeholder="把準備發布的貼文貼在這裡…&#10;&#10;例如：&#10;&#10;今天分享 3 個小技巧。&#10;&#10;第一個技巧…"
+          aria-describedby="statsBar"
+        ></textarea>
+
+        <div id="statsBar" class="stats-bar" aria-live="polite">
+          <span id="statChars">0 字</span>
+          <span class="stats-bar__dot">·</span>
+          <span id="statLines">0 行</span>
+          <span class="stats-bar__dot">·</span>
+          <span id="statBlank">沒有需要轉換的空白行</span>
+        </div>
+
+        <div class="options-panel">
+          <label class="option">
+            <input type="checkbox" id="optBlankLines" checked />
+            <span class="option__text">
+              <span class="option__title">保留空白行</span>
+              <span class="option__desc">在空白行加入看不見的零寬度字元。</span>
+            </span>
+          </label>
+          <label class="option">
+            <input type="checkbox" id="optChineseSpacing" />
+            <span class="option__text">
+              <span class="option__title">中文／英文／數字自動加空格</span>
+              <span class="option__desc">例如「使用ChatGPT寫3篇」→「使用 ChatGPT 寫 3 篇」。</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="action-bar">
+          <button id="convertBtn" class="btn btn--primary" disabled>立即轉換</button>
+          <button id="clearBtn" class="btn btn--secondary">清除</button>
+        </div>
+      </section>
+
+      <section class="panel result-panel" aria-labelledby="resultLabel">
+        <div class="panel__head">
+          <span id="resultLabel" class="panel__label">轉換結果</span>
+        </div>
+
+        <div id="conversionSummary" class="summary" aria-live="polite" hidden></div>
+
+        <div class="result-wrap">
+          <textarea id="outputText" class="textarea textarea--result" readonly placeholder="轉換結果會顯示在這裡"></textarea>
+          <div id="resultEmpty" class="result-empty" aria-hidden="true">↵</div>
+        </div>
+
+        <label class="option option--inline">
+          <input type="checkbox" id="optShowInvisible" />
+          <span class="option__text">
+            <span class="option__title">顯示隱形字元</span>
+          </span>
+        </label>
+
+        <div class="action-bar">
+          <button id="copyBtn" class="btn btn--primary" disabled>複製結果</button>
+        </div>
+      </section>
+    </main>
+
+    <p class="footnote">貼到 Facebook / Instagram / Threads 前都可以使用</p>
+
+    <section id="faq" class="faq" hidden>
+      <h2>常見問題</h2>
+
+      <details>
+        <summary>為什麼貼到社群後空白行會不見？</summary>
+        <p>部分平台會清理純空白行或重新正規化 whitespace。</p>
+      </details>
+
+      <details>
+        <summary>這個工具做了什麼？</summary>
+        <p>在原本完全空白的行中放入看不見的 U+200B 字元，使該行在字串層級不再是完全空白。</p>
+      </details>
+
+      <details>
+        <summary>會改變我的文字嗎？</summary>
+        <p>「保留空白行」功能只處理空白行。若另外開啟「中文／英文／數字自動加空格」，才會修改中英數交界間距。</p>
+      </details>
+
+      <details>
+        <summary>我的文字會被上傳嗎？</summary>
+        <p>不會。所有文字處理皆在瀏覽器本機完成。</p>
+      </details>
+
+      <details>
+        <summary>沒網路也可以用嗎？</summary>
+        <p>安裝 PWA 或曾載入網站資源後，核心轉換功能可離線使用。</p>
+      </details>
+
+      <details>
+        <summary>為什麼按複製沒有反應？</summary>
+        <p>瀏覽器可能阻止 Clipboard API。結果區仍可手動選取並複製。</p>
+      </details>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div id="iosInstallHint" class="ios-hint" hidden>
+    <p>在 Safari 點選「分享」→「加入主畫面」即可安裝。</p>
+    <button id="iosInstallClose" class="btn btn--ghost">知道了</button>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

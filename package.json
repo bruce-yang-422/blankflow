@@ -1,0 +1,11 @@
+{
+  "name": "blankflow",
+  "version": "1.0.0",
+  "description": "空白換行轉換器 - 社群貼文空白行與中英數排版工具",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run.js",
+    "dev": "npx --yes serve ."
+  },
+  "license": "MIT"
+}
