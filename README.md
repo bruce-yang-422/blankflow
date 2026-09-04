@@ -1,5 +1,7 @@
 # 空白換行轉換器 BlankFlow
 
+🔗 網站：[blankflow.stack-base.com](https://blankflow.stack-base.com)
+
 將 Facebook、Instagram、Threads 等平台容易被吃掉的空白行，轉換為含有零寬度空白字元（U+200B）的有效空白行；同時提供中文／英文／數字間距優化、字數統計、即時預覽與一鍵複製。
 
 - 免登入、免上傳，所有文字只在瀏覽器本機處理
@@ -24,12 +26,17 @@ npm test
 
 ## 部署到 GitHub Pages
 
-1. 建立 GitHub repository 並 push 此專案。
-2. Repository → Settings → Pages。
-3. Source 選擇 `Deploy from a branch`，Branch 選擇 `main` / `(root)`。
-4. 儲存後等待數分鐘，即可透過 `https://<username>.github.io/<repo>/` 開啟。
+本專案透過 `.github/workflows/deploy.yml` 自動部署：每次 push 到 `main` 分支時，GitHub Actions 會先跑測試，再將整個專案發布到 GitHub Pages。
 
-專案內所有資源路徑皆使用相對路徑，可直接部署在 GitHub Pages 的子路徑（`/<repo>/`）下。
+首次設定：
+
+1. Repository → Settings → Pages。
+2. Source 選擇 `GitHub Actions`。
+3. push 到 `main` 後，Actions 分頁可查看部署進度。
+
+自訂網域：專案根目錄的 `CNAME` 檔案指定了 `blankflow.stack-base.com`，並在 Cloudflare DNS 設定 CNAME 記錄指向 `<username>.github.io`。若未設定自訂網域，預設會部署在 `https://<username>.github.io/<repo>/`。
+
+專案內所有資源路徑皆使用相對路徑，可直接部署在 GitHub Pages 的子路徑（`/<repo>/`）或自訂網域根目錄下。
 
 ## 專案結構
 
@@ -37,6 +44,7 @@ npm test
 index.html                 主頁面
 manifest.webmanifest       PWA manifest
 sw.js                       Service Worker（App Shell 快取 + 離線）
+CNAME                       自訂網域設定（GitHub Pages）
 src/
   main.js                   UI 邏輯與事件綁定
   styles/globals.css        樣式
@@ -47,6 +55,8 @@ src/
     statistics.js           字數／行數／空白行統計
     clipboard.js            複製與 fallback
     processText.js          組合轉換流程
+    history.js               最近轉換記錄（localStorage，上限 10 筆）
 icons/                      PWA 圖示
 tests/                      核心函式單元測試
+.github/workflows/          GitHub Actions 自動部署設定
 ```
