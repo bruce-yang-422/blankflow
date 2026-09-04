@@ -39,14 +39,15 @@ const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 const OPTIONS_KEY = "blankflow.options";
 const ZWSP_RE = /\u200B/g;
 
-// \u5404\u793E\u7FA4\u5E73\u53F0\u7684\u6587\u5B57\u9577\u5EA6\u9650\u5236\uFF0F\u6298\u758A\u9580\u6ABB
+// \u5404\u793E\u7FA4\u5E73\u53F0\u7684\u6587\u5B57\u9577\u5EA6\u9650\u5236\uFF0F\u6298\u758A\u63D0\u9192
+// threshold \u70BA null \u8868\u793A\u4E0D\u4F9D\u5B57\u6578\u5224\u65B7\uFF0C\u53EA\u8981\u6709\u5167\u5BB9\u5C31\u56FA\u5B9A\u986F\u793A
 const PLATFORM_LENGTH_RULES = [
   {
     id: "facebook",
     tone: "info",
-    threshold: 125,
+    threshold: null,
     message: () =>
-      `\u8CBC\u6587\u5DF2\u8D85\u904E\u7D04 <b>3\uFF5E4 \u884C</b>\uFF0CFacebook \u52D5\u614B\u7246\u5F88\u53EF\u80FD\u6298\u758A\u986F\u793A\u300C\u67E5\u770B\u66F4\u591A\u300D\uFF0C\u9700\u8981\u8B80\u8005\u984D\u5916\u9EDE\u64CA\u624D\u80FD\u770B\u5230\u5168\u6587\u3002\u6298\u758A\u9EDE\u6703\u4F9D\u88DD\u7F6E\u8207\u7248\u9762\uFF08\u624B\u6A5F App\uFF0F\u624B\u6A5F\u7DB2\u9801\uFF0F\u684C\u9762\u7248\uFF09\u800C\u4E0D\u540C\uFF0C\u624B\u6A5F\u4E0A\u901A\u5E38\u6700\u65E9\u51FA\u73FE\uFF0C\u684C\u9762\u7248\u5927\u7D04\u5728 <b>477</b> \u5B57\u5DE6\u53F3\u624D\u6703\u6298\u758A\u3002`,
+      `Facebook \u52D5\u614B\u7246\u53EF\u80FD\u6703\u6298\u758A\u8CBC\u6587\u986F\u793A\u300C\u67E5\u770B\u66F4\u591A\u300D\uFF0C\u6298\u758A\u9EDE\u4F9D\u88DD\u7F6E\u8207\u7248\u9762\u800C\u7570\u3001\u7121\u6CD5\u6E96\u78BA\u9810\u6E2C\uFF0C\u5EFA\u8B70\u767C\u5E03\u524D\u5148\u9810\u89BD\u78BA\u8A8D\u3002`,
   },
   {
     id: "threads",
@@ -95,26 +96,29 @@ function saveOptions() {
 }
 
 function renderLengthWarnings(characters) {
-  const triggered = PLATFORM_LENGTH_RULES.filter((rule) => characters > rule.threshold);
+  const triggered = PLATFORM_LENGTH_RULES.filter((rule) =>
+    rule.threshold === null ? characters > 0 : characters > rule.threshold
+  );
 
   lengthWarnings.innerHTML = "";
   lengthWarnings.hidden = triggered.length === 0;
 
-  triggered.forEach((rule) => {
-    const item = document.createElement("li");
-    item.className = `length-warning${rule.tone === "info" ? " length-warning--info" : ""}`;
+  if (triggered.length === 0) return;
 
-    const icon = document.createElement("span");
-    icon.className = "length-warning__icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.textContent = rule.tone === "info" ? "ℹ" : "⚠";
+  const isWarn = triggered.some((rule) => rule.tone === "warn");
+  const item = document.createElement("li");
+  item.className = `length-warning${isWarn ? "" : " length-warning--info"}`;
 
-    const text = document.createElement("span");
-    text.innerHTML = rule.message(rule.threshold);
+  const icon = document.createElement("span");
+  icon.className = "length-warning__icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.textContent = isWarn ? "⚠" : "ℹ";
 
-    item.append(icon, text);
-    lengthWarnings.appendChild(item);
-  });
+  const text = document.createElement("span");
+  text.innerHTML = triggered.map((rule) => rule.message(rule.threshold)).join(" ");
+
+  item.append(icon, text);
+  lengthWarnings.appendChild(item);
 }
 
 function updateStats() {
@@ -196,7 +200,7 @@ function handleConvert() {
   if (!hasConvertedOnce) {
     hasConvertedOnce = true;
     onboarding.hidden = true;
-    maybeShowInstallPrompt();
+    maybeShowIosInstallHint();
   }
 }
 
@@ -268,29 +272,38 @@ const installBtn = document.getElementById("installBtn");
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   deferredInstallPrompt = event;
+  installBtn.hidden = false;
 });
 
-function maybeShowInstallPrompt() {
-  if (deferredInstallPrompt) {
-    installBtn.hidden = false;
-    return;
-  }
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+  || window.navigator.standalone === true;
 
+if (isStandalone) {
+  installBtn.hidden = true;
+}
+
+function maybeShowIosInstallHint() {
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia("(display-mode: standalone)").matches
-    || window.navigator.standalone === true;
-
   if (isIOS && !isStandalone) {
     document.getElementById("iosInstallHint").hidden = false;
   }
 }
 
 installBtn.addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  installBtn.hidden = true;
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.hidden = true;
+    return;
+  }
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS) {
+    document.getElementById("iosInstallHint").hidden = false;
+  } else {
+    showToast("此瀏覽器不支援一鍵安裝，可從瀏覽器選單選擇「加入主畫面」或「安裝應用程式」。", 4000);
+  }
 });
 
 document.getElementById("iosInstallClose").addEventListener("click", () => {
