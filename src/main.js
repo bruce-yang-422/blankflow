@@ -18,11 +18,15 @@ const lengthWarnings = document.getElementById("lengthWarnings");
 
 const optBlankLines = document.getElementById("optBlankLines");
 const optChineseSpacing = document.getElementById("optChineseSpacing");
+const optWidthConversion = document.getElementById("optWidthConversion");
+const optRememberInput = document.getElementById("optRememberInput");
 const optShowInvisible = document.getElementById("optShowInvisible");
 
 const convertBtn = document.getElementById("convertBtn");
+const undoBtn = document.getElementById("undoBtn");
 const clearBtn = document.getElementById("clearBtn");
 const copyBtn = document.getElementById("copyBtn");
+const shareBtn = document.getElementById("shareBtn");
 
 const conversionSummary = document.getElementById("conversionSummary");
 const onboarding = document.getElementById("onboarding");
@@ -65,9 +69,12 @@ const PLATFORM_LENGTH_RULES = [
   },
 ];
 
+const REMEMBERED_INPUT_KEY = "blankflow.rememberedInput";
+
 let currentOutput = "";
 let hasConvertedOnce = false;
 let toastTimer = null;
+let undoSnapshot = null;
 
 function loadOptions() {
   try {
@@ -76,6 +83,8 @@ function loadOptions() {
     const saved = JSON.parse(raw);
     if (typeof saved.blankLines === "boolean") optBlankLines.checked = saved.blankLines;
     if (typeof saved.chineseSpacing === "boolean") optChineseSpacing.checked = saved.chineseSpacing;
+    if (typeof saved.widthConversion === "string") optWidthConversion.value = saved.widthConversion;
+    if (typeof saved.rememberInput === "boolean") optRememberInput.checked = saved.rememberInput;
   } catch {
     // ignore corrupted storage
   }
@@ -88,8 +97,32 @@ function saveOptions() {
       JSON.stringify({
         blankLines: optBlankLines.checked,
         chineseSpacing: optChineseSpacing.checked,
+        widthConversion: optWidthConversion.value,
+        rememberInput: optRememberInput.checked,
       })
     );
+  } catch {
+    // storage unavailable, ignore
+  }
+}
+
+function loadRememberedInput() {
+  if (!optRememberInput.checked) return;
+  try {
+    const saved = localStorage.getItem(REMEMBERED_INPUT_KEY);
+    if (saved) inputText.value = saved;
+  } catch {
+    // storage unavailable, ignore
+  }
+}
+
+function saveRememberedInput() {
+  try {
+    if (optRememberInput.checked) {
+      localStorage.setItem(REMEMBERED_INPUT_KEY, inputText.value);
+    } else {
+      localStorage.removeItem(REMEMBERED_INPUT_KEY);
+    }
   } catch {
     // storage unavailable, ignore
   }
@@ -133,6 +166,7 @@ function updateStats() {
   renderLengthWarnings(stats.characters);
 
   convertBtn.disabled = value.trim() === "";
+  saveRememberedInput();
 }
 
 function renderOutput(text) {
@@ -150,6 +184,7 @@ function renderOutput(text) {
     : text;
 
   copyBtn.disabled = !hasContent;
+  shareBtn.hidden = !hasContent || !navigator.share;
 }
 
 function showToast(message, duration = 2500) {
@@ -165,14 +200,24 @@ function handleConvert() {
   const value = inputText.value;
   if (!value.trim()) return;
 
-  const { text, report } = processText(value, {
+  undoSnapshot = { input: value, output: currentOutput };
+  undoBtn.disabled = false;
+
+  const options = {
     blankLines: optBlankLines.checked,
     chineseSpacing: optChineseSpacing.checked,
-  });
+    widthConversion: optWidthConversion.value,
+  };
+
+  const { text, report } = processText(value, options);
 
   renderOutput(text);
 
   const lines = [];
+  if (options.widthConversion !== "none" && report.convertedWidth > 0) {
+    const label = options.widthConversion === "toHalfwidth" ? "全形轉半形" : "半形轉全形";
+    lines.push(`✓ 已${label} ${report.convertedWidth} 個字元`);
+  }
   if (optBlankLines.checked) {
     lines.push(
       report.convertedBlankLines > 0
@@ -190,10 +235,7 @@ function handleConvert() {
   addHistoryEntry({
     input: value,
     output: text,
-    options: {
-      blankLines: optBlankLines.checked,
-      chineseSpacing: optChineseSpacing.checked,
-    },
+    options,
   });
   renderHistory();
 
@@ -204,11 +246,24 @@ function handleConvert() {
   }
 }
 
+function handleUndo() {
+  if (!undoSnapshot) return;
+  inputText.value = undoSnapshot.input;
+  updateStats();
+  renderOutput(undoSnapshot.output);
+  conversionSummary.hidden = true;
+  conversionSummary.innerHTML = "";
+  undoSnapshot = null;
+  undoBtn.disabled = true;
+}
+
 function handleClear() {
   inputText.value = "";
   renderOutput("");
   conversionSummary.hidden = true;
   conversionSummary.innerHTML = "";
+  undoSnapshot = null;
+  undoBtn.disabled = true;
   updateStats();
   inputText.focus();
 }
@@ -228,18 +283,38 @@ async function handleCopy() {
   }
 }
 
+async function handleShare() {
+  if (!currentOutput || !navigator.share) return;
+
+  try {
+    await navigator.share({ text: currentOutput });
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      showToast("分享失敗，請改用複製結果。", 3000);
+    }
+  }
+}
+
 inputText.addEventListener("input", updateStats);
 
 optBlankLines.addEventListener("change", saveOptions);
 optChineseSpacing.addEventListener("change", saveOptions);
+optWidthConversion.addEventListener("change", saveOptions);
+
+optRememberInput.addEventListener("change", () => {
+  saveOptions();
+  saveRememberedInput();
+});
 
 optShowInvisible.addEventListener("change", () => {
   renderOutput(currentOutput);
 });
 
 convertBtn.addEventListener("click", handleConvert);
+undoBtn.addEventListener("click", handleUndo);
 clearBtn.addEventListener("click", handleClear);
 copyBtn.addEventListener("click", handleCopy);
+shareBtn.addEventListener("click", handleShare);
 
 inputText.addEventListener("keydown", (event) => {
   const isModifierEnter = (event.metaKey || event.ctrlKey) && event.key === "Enter";
@@ -381,11 +456,16 @@ function restoreHistoryEntry(entry) {
   inputText.value = entry.input;
   optBlankLines.checked = entry.options.blankLines;
   optChineseSpacing.checked = entry.options.chineseSpacing;
+  if (entry.options.widthConversion) {
+    optWidthConversion.value = entry.options.widthConversion;
+  }
   saveOptions();
   updateStats();
   renderOutput(entry.output);
   conversionSummary.hidden = true;
   conversionSummary.innerHTML = "";
+  undoSnapshot = null;
+  undoBtn.disabled = true;
   inputText.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -441,6 +521,7 @@ clearHistoryBtn.addEventListener("click", () => {
 
 // Init
 loadOptions();
+loadRememberedInput();
 updateStats();
 updateOnlineStatus();
 applyTheme(loadTheme());

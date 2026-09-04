@@ -99,10 +99,29 @@
               <span class="option__desc">例如「使用ChatGPT寫3篇」→「使用 ChatGPT 寫 3 篇」。</span>
             </span>
           </label>
+          <label class="option option--select">
+            <span class="option__text">
+              <span class="option__title">全形／半形轉換</span>
+              <span class="option__desc">例如「ＡＢＣ１２３」→「ABC123」。</span>
+            </span>
+            <select id="optWidthConversion" class="select">
+              <option value="none">不轉換</option>
+              <option value="toHalfwidth">全形轉半形</option>
+              <option value="toFullwidth">半形轉全形</option>
+            </select>
+          </label>
+          <label class="option">
+            <input type="checkbox" id="optRememberInput" />
+            <span class="option__text">
+              <span class="option__title">記住上次輸入內容</span>
+              <span class="option__desc">下次開啟時自動帶回目前輸入的文字。</span>
+            </span>
+          </label>
         </div>
 
         <div class="action-bar">
           <button id="convertBtn" class="btn btn--primary" disabled>立即轉換</button>
+          <button id="undoBtn" class="btn btn--secondary" disabled>復原</button>
           <button id="clearBtn" class="btn btn--secondary">清除</button>
         </div>
       </section>
@@ -133,6 +152,7 @@
 
         <div id="resultActionBar" class="action-bar" hidden>
           <button id="copyBtn" class="btn btn--primary" disabled>複製結果</button>
+          <button id="shareBtn" class="btn btn--secondary" hidden>分享</button>
         </div>
       </section>
     </main>
@@ -187,6 +207,11 @@
       <details>
         <summary>為什麼會出現平台字數提示？</summary>
         <p>提醒 Facebook、Threads、Instagram 的貼文長度限制或折疊風險，僅供參考，實際規則以各平台當下顯示為準。</p>
+      </details>
+
+      <details>
+        <summary>「記住上次輸入內容」會把文字傳到哪裡？</summary>
+        <p>只會存在你瀏覽器的本機儲存空間（localStorage），不會上傳。預設關閉，關閉後會清除已記住的內容。</p>
       </details>
     </section>
   </div>

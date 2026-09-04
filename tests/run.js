@@ -12,6 +12,7 @@ import { convertBlankLines } from "../src/core/blankLines.js";
 import { optimizeChineseSpacing } from "../src/core/chineseSpacing.js";
 import { countVisibleCharacters } from "../src/core/characterCount.js";
 import { loadHistory, addHistoryEntry, clearHistory, removeHistoryEntry } from "../src/core/history.js";
+import { toHalfwidth, toFullwidth } from "../src/core/widthConversion.js";
 
 let pass = 0;
 let fail = 0;
@@ -82,6 +83,18 @@ assertEqual(afterRemove.length, 1, "removeHistoryEntry removes exactly one entry
 assertEqual(afterRemove[0].input, "a", "removeHistoryEntry keeps the other entry");
 
 clearHistory();
+
+// widthConversion
+assertEqual(toHalfwidth("ＡＢＣ１２３").text, "ABC123", "fullwidth latin/digits to halfwidth");
+assertEqual(toHalfwidth("！＠＃").text, "!@#", "fullwidth symbols to halfwidth");
+assertEqual(toHalfwidth("Ａ　Ｂ").text, "A B", "fullwidth space to halfwidth space");
+assertEqual(toHalfwidth("中文不受影響123").text, "中文不受影響123", "CJK untouched by toHalfwidth");
+assertEqual(toHalfwidth("").text, "", "toHalfwidth empty string");
+
+assertEqual(toFullwidth("ABC123").text, "ＡＢＣ１２３", "halfwidth latin/digits to fullwidth");
+assertEqual(toFullwidth("!@#").text, "！＠＃", "halfwidth symbols to fullwidth");
+assertEqual(toFullwidth("A B").text, "Ａ　Ｂ", "halfwidth space to fullwidth space");
+assertEqual(toFullwidth("中文不受影響").text, "中文不受影響", "CJK untouched by toFullwidth");
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);
