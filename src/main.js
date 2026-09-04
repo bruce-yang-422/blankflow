@@ -4,7 +4,11 @@ import { copyText } from "./core/clipboard.js";
 
 const inputText = document.getElementById("inputText");
 const outputText = document.getElementById("outputText");
-const resultWrap = outputText.parentElement;
+const resultWrap = document.getElementById("resultWrap");
+const resultPanel = document.getElementById("resultPanel");
+const resultEmptyState = document.getElementById("resultEmptyState");
+const showInvisibleOption = document.getElementById("showInvisibleOption");
+const resultActionBar = document.getElementById("resultActionBar");
 
 const statChars = document.getElementById("statChars");
 const statLines = document.getElementById("statLines");
@@ -73,13 +77,19 @@ function updateStats() {
 
 function renderOutput(text) {
   currentOutput = text;
-  resultWrap.classList.toggle("has-content", text.length > 0);
+
+  const hasContent = text.length > 0;
+  resultPanel.classList.toggle("is-empty", !hasContent);
+  resultEmptyState.hidden = hasContent;
+  resultWrap.hidden = !hasContent;
+  showInvisibleOption.hidden = !hasContent;
+  resultActionBar.hidden = !hasContent;
 
   outputText.value = optShowInvisible.checked
     ? text.replace(ZWSP_RE, "␣")
     : text;
 
-  copyBtn.disabled = text.length === 0;
+  copyBtn.disabled = !hasContent;
 }
 
 function showToast(message, duration = 2500) {

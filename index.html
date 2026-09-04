@@ -8,7 +8,9 @@
   <meta name="theme-color" content="#111827" />
 
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="icons/logo.ico" sizes="any" />
+  <link rel="icon" href="icons/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="icons/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="icons/pwa-192.png" />
   <link rel="stylesheet" href="src/styles/globals.css" />
 </head>
@@ -16,7 +18,7 @@
   <div class="app">
     <header class="header">
       <div class="header__brand">
-        <span class="header__logo" aria-hidden="true">⌁</span>
+        <img class="header__logo" src="icons/pwa-192.png" alt="" width="34" height="34" />
         <span class="header__title">空白換行轉換器</span>
       </div>
       <div class="header__actions">
@@ -80,26 +82,31 @@
         </div>
       </section>
 
-      <section class="panel result-panel" aria-labelledby="resultLabel">
+      <section id="resultPanel" class="panel result-panel is-empty" aria-labelledby="resultLabel">
         <div class="panel__head">
           <span id="resultLabel" class="panel__label">轉換結果</span>
         </div>
 
-        <div id="conversionSummary" class="summary" aria-live="polite" hidden></div>
-
-        <div class="result-wrap">
-          <textarea id="outputText" class="textarea textarea--result" readonly placeholder="轉換結果會顯示在這裡"></textarea>
-          <div id="resultEmpty" class="result-empty" aria-hidden="true">↵</div>
+        <div id="resultEmptyState" class="result-empty-state">
+          <span class="result-empty-state__icon" aria-hidden="true">✨</span>
+          <p class="result-empty-state__title">轉換結果會顯示在這裡</p>
+          <p class="result-empty-state__desc">貼上文字並按下「立即轉換」即可看到結果</p>
         </div>
 
-        <label class="option option--inline">
+        <div id="conversionSummary" class="summary" aria-live="polite" hidden></div>
+
+        <div id="resultWrap" class="result-wrap" hidden>
+          <textarea id="outputText" class="textarea textarea--result" readonly></textarea>
+        </div>
+
+        <label id="showInvisibleOption" class="option option--inline" hidden>
           <input type="checkbox" id="optShowInvisible" />
           <span class="option__text">
             <span class="option__title">顯示隱形字元</span>
           </span>
         </label>
 
-        <div class="action-bar">
+        <div id="resultActionBar" class="action-bar" hidden>
           <button id="copyBtn" class="btn btn--primary" disabled>複製結果</button>
         </div>
       </section>

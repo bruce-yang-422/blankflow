@@ -1,20 +1,22 @@
 :root {
-  --bg: #F7F8FA;
-  --bg-accent: #EEF1FF;
+  --bg: #F5F6FA;
+  --bg-accent: #E8ECFF;
   --card: #FFFFFF;
-  --text: #111827;
-  --text-secondary: #6B7280;
+  --text: #0F172A;
+  --text-secondary: #64748B;
   --border: #E5E7EB;
   --primary: #4F6EF7;
   --primary-hover: #3d5ce0;
+  --primary-dark: #3548C4;
   --primary-soft: #EEF1FF;
   --success: #16A34A;
-  --radius-card: 20px;
+  --radius-card: 22px;
   --radius-input: 14px;
   --radius-btn: 12px;
   --radius-chip: 999px;
-  --shadow: 0 1px 2px rgba(17,24,39,.04), 0 12px 32px rgba(17,24,39,.06);
+  --shadow: 0 2px 4px rgba(17,24,39,.04), 0 16px 40px rgba(30,41,99,.08);
   --shadow-sm: 0 1px 2px rgba(17,24,39,.05);
+  --shadow-lift: 0 20px 48px rgba(30,41,99,.12);
   color-scheme: light;
 }
 
@@ -29,12 +31,14 @@ html, body {
 
 body {
   background:
-    radial-gradient(1200px 480px at 50% -120px, var(--bg-accent), transparent),
+    radial-gradient(900px 420px at 15% -100px, var(--bg-accent), transparent 70%),
+    radial-gradient(900px 420px at 85% -60px, #FDEFF8, transparent 70%),
     var(--bg);
   color: var(--text);
   font-family: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.6;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app {
@@ -68,15 +72,11 @@ body {
 }
 
 .header__logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 17px;
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  box-shadow: 0 4px 12px rgba(79, 110, 247, 0.35);
 }
 
 .header__actions {
@@ -149,6 +149,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  transition: box-shadow 0.2s ease;
+}
+
+.panel:hover {
+  box-shadow: var(--shadow-lift);
 }
 
 @media (min-width: 640px) {
@@ -240,18 +245,47 @@ body {
   position: relative;
 }
 
-.result-empty {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 32px;
-  color: var(--border);
-  pointer-events: none;
+/* Result empty state */
+.result-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+  padding: 40px 20px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-input);
+  background:
+    radial-gradient(220px 120px at 50% 0%, var(--primary-soft), transparent 70%);
 }
 
-.result-wrap.has-content .result-empty {
-  display: none;
+.result-empty-state__icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.result-empty-state__title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.result-empty-state__desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.panel.is-empty {
+  justify-content: center;
+}
+
+@media (min-width: 900px) {
+  .panel.is-empty .result-empty-state {
+    padding: 64px 24px;
+  }
 }
 
 /* Stats bar */
@@ -342,18 +376,19 @@ body {
 }
 
 .btn--primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff;
-  box-shadow: 0 6px 16px rgba(79, 110, 247, 0.28);
+  box-shadow: 0 8px 20px rgba(79, 110, 247, 0.32);
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: linear-gradient(135deg, var(--primary-hover), var(--primary-dark));
+  box-shadow: 0 10px 24px rgba(79, 110, 247, 0.4);
 }
 
 .btn--primary:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 3px 10px rgba(79, 110, 247, 0.28);
+  box-shadow: 0 4px 12px rgba(79, 110, 247, 0.32);
 }
 
 .btn--secondary {
@@ -384,10 +419,12 @@ body {
 /* Summary */
 .summary {
   font-size: 13px;
-  color: var(--success);
-  background: #F0FDF4;
+  font-weight: 500;
+  color: #15803D;
+  background: #ECFDF5;
+  border: 1px solid #BBF7D0;
   border-radius: var(--radius-btn);
-  padding: 10px 12px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
