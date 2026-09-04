@@ -1,6 +1,17 @@
+globalThis.localStorage = (() => {
+  let store = {};
+  return {
+    getItem: (key) => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+  };
+})();
+
 import { convertBlankLines } from "../src/core/blankLines.js";
 import { optimizeChineseSpacing } from "../src/core/chineseSpacing.js";
 import { countVisibleCharacters } from "../src/core/characterCount.js";
+import { loadHistory, addHistoryEntry, clearHistory, removeHistoryEntry } from "../src/core/history.js";
 
 let pass = 0;
 let fail = 0;
@@ -42,6 +53,35 @@ assertEqual(optimizeChineseSpacing("使用ChatGPT寫3篇Threads貼文").text, "�
 assertEqual(countVisibleCharacters("中文"), 2, "plain CJK count");
 assertEqual(countVisibleCharacters("😀"), 1, "emoji counted as 1 grapheme");
 assertEqual(countVisibleCharacters(""), 0, "empty string count");
+
+// history
+clearHistory();
+assertEqual(loadHistory().length, 0, "history starts empty");
+
+for (let i = 0; i < 12; i += 1) {
+  addHistoryEntry({
+    input: `input-${i}`,
+    output: `output-${i}`,
+    options: { blankLines: true, chineseSpacing: false },
+  });
+}
+const history = loadHistory();
+assertEqual(history.length, 10, "history caps at 10 entries");
+assertEqual(history[0].input, "input-11", "newest entry is first");
+assertEqual(history[9].input, "input-2", "oldest kept entry is the 10th most recent");
+
+clearHistory();
+assertEqual(loadHistory().length, 0, "clearHistory empties the list");
+
+addHistoryEntry({ input: "a", output: "a", options: { blankLines: true, chineseSpacing: false } });
+addHistoryEntry({ input: "b", output: "b", options: { blankLines: true, chineseSpacing: false } });
+const beforeRemove = loadHistory();
+removeHistoryEntry(beforeRemove[0].id);
+const afterRemove = loadHistory();
+assertEqual(afterRemove.length, 1, "removeHistoryEntry removes exactly one entry");
+assertEqual(afterRemove[0].input, "a", "removeHistoryEntry keeps the other entry");
+
+clearHistory();
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

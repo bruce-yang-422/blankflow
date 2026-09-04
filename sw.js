@@ -1,4 +1,4 @@
-const CACHE_VERSION = "blankflow-v5";
+const CACHE_VERSION = "blankflow-v6";
 
 const APP_SHELL = [
   "./",
@@ -12,6 +12,7 @@ const APP_SHELL = [
   "./src/core/statistics.js",
   "./src/core/clipboard.js",
   "./src/core/processText.js",
+  "./src/core/history.js",
   "./icons/logo.ico",
   "./icons/favicon-32.png",
   "./icons/pwa-192.png",

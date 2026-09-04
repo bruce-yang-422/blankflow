@@ -1,6 +1,7 @@
 import { getTextStatistics } from "./core/statistics.js";
 import { processText } from "./core/processText.js";
 import { copyText } from "./core/clipboard.js";
+import { loadHistory, addHistoryEntry, clearHistory, removeHistoryEntry } from "./core/history.js";
 
 const inputText = document.getElementById("inputText");
 const outputText = document.getElementById("outputText");
@@ -13,6 +14,7 @@ const resultActionBar = document.getElementById("resultActionBar");
 const statChars = document.getElementById("statChars");
 const statLines = document.getElementById("statLines");
 const statBlank = document.getElementById("statBlank");
+const threadsWarning = document.getElementById("threadsWarning");
 
 const optBlankLines = document.getElementById("optBlankLines");
 const optChineseSpacing = document.getElementById("optChineseSpacing");
@@ -30,8 +32,13 @@ const faq = document.getElementById("faq");
 
 const offlineBadge = document.getElementById("offlineBadge");
 
+const historyPanel = document.getElementById("historyPanel");
+const historyList = document.getElementById("historyList");
+const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+
 const OPTIONS_KEY = "blankflow.options";
 const ZWSP_RE = /\u200B/g;
+const THREADS_MAIN_POST_LIMIT = 500;
 
 let currentOutput = "";
 let hasConvertedOnce = false;
@@ -71,6 +78,8 @@ function updateStats() {
   statLines.innerHTML = `<b>${stats.lines}</b> 行`;
   statBlank.innerHTML =
     stats.blankLines > 0 ? `<b>${stats.blankLines}</b> 個空白行` : "沒有需要轉換的空白行";
+
+  threadsWarning.hidden = stats.characters <= THREADS_MAIN_POST_LIMIT;
 
   convertBtn.disabled = value.trim() === "";
 }
@@ -126,6 +135,16 @@ function handleConvert() {
 
   conversionSummary.innerHTML = lines.map(line => `<span>${line}</span>`).join("");
   conversionSummary.hidden = lines.length === 0;
+
+  addHistoryEntry({
+    input: value,
+    output: text,
+    options: {
+      blankLines: optBlankLines.checked,
+      chineseSpacing: optChineseSpacing.checked,
+    },
+  });
+  renderHistory();
 
   if (!hasConvertedOnce) {
     hasConvertedOnce = true;
@@ -231,7 +250,7 @@ document.getElementById("iosInstallClose").addEventListener("click", () => {
   document.getElementById("iosInstallHint").hidden = true;
 });
 
-// Service worker registration + update prompt
+// Service worker registration — updates apply silently on next visit
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").then((registration) => {
@@ -241,37 +260,13 @@ if ("serviceWorker" in navigator) {
 
         newWorker.addEventListener("statechange", () => {
           if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            showUpdatePrompt(registration);
+            newWorker.postMessage({ type: "SKIP_WAITING" });
           }
         });
       });
     }).catch(() => {
       // registration failed, app still works online
     });
-  });
-}
-
-function showUpdatePrompt(registration) {
-  clearTimeout(toastTimer);
-  toast.hidden = false;
-  toast.innerHTML = "";
-
-  const label = document.createElement("span");
-  label.textContent = "有新版可以使用　";
-  const btn = document.createElement("button");
-  btn.textContent = "立即更新";
-  btn.className = "btn--ghost";
-  btn.style.marginLeft = "8px";
-  btn.addEventListener("click", () => {
-    registration.waiting?.postMessage({ type: "SKIP_WAITING" });
-  });
-
-  toast.append(label, btn);
-}
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    window.location.reload();
   });
 }
 
@@ -315,8 +310,78 @@ themeButtons.forEach((btn) => {
   });
 });
 
+// History panel
+function formatHistoryTime(timestamp) {
+  const date = new Date(timestamp);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function restoreHistoryEntry(entry) {
+  inputText.value = entry.input;
+  optBlankLines.checked = entry.options.blankLines;
+  optChineseSpacing.checked = entry.options.chineseSpacing;
+  saveOptions();
+  updateStats();
+  renderOutput(entry.output);
+  conversionSummary.hidden = true;
+  conversionSummary.innerHTML = "";
+  inputText.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderHistory() {
+  const entries = loadHistory();
+  historyPanel.hidden = entries.length === 0;
+
+  if (entries.length === 0) {
+    historyList.innerHTML = "";
+    return;
+  }
+
+  historyList.innerHTML = "";
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    item.className = "history-item";
+
+    const body = document.createElement("button");
+    body.type = "button";
+    body.className = "history-item__body";
+
+    const preview = document.createElement("span");
+    preview.className = "history-item__preview";
+    preview.textContent = entry.input.replace(/\s+/g, " ").trim().slice(0, 60) || "（空白內容）";
+
+    const meta = document.createElement("span");
+    meta.className = "history-item__meta";
+    meta.textContent = formatHistoryTime(entry.createdAt);
+
+    body.append(preview, meta);
+    body.addEventListener("click", () => restoreHistoryEntry(entry));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "history-item__delete";
+    deleteBtn.setAttribute("aria-label", "刪除這筆記錄");
+    deleteBtn.textContent = "✕";
+    deleteBtn.addEventListener("click", () => {
+      removeHistoryEntry(entry.id);
+      renderHistory();
+    });
+
+    item.append(body, deleteBtn);
+    historyList.appendChild(item);
+  });
+}
+
+clearHistoryBtn.addEventListener("click", () => {
+  clearHistory();
+  renderHistory();
+});
+
 // Init
 loadOptions();
 updateStats();
 updateOnlineStatus();
 applyTheme(loadTheme());
+renderHistory();

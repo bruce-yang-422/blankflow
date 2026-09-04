@@ -52,9 +52,9 @@
     </header>
 
     <section class="hero">
-      <span class="hero__trust">本機處理・不上傳文字</span>
+      <span class="hero__trust">只在本機儲存・不上傳伺服器</span>
       <h1 class="hero__title">讓社群貼文的空白行，<em>不再被吃掉</em>。</h1>
-      <p class="hero__subtitle">貼上文字，一鍵嵌入零寬度字元。Facebook、Instagram、Threads 貼文排版更乾淨，複製即可用。</p>
+      <p class="hero__subtitle">貼上文字，一鍵嵌入零寬度字元。Facebook、Instagram、Threads 貼文排版更乾淨，複製即可用。最近 10 筆轉換記錄會留在瀏覽器裡，方便你隨時回頭找。</p>
     </section>
 
     <main class="tool-layout">
@@ -80,6 +80,14 @@
           <span id="statLines">0 行</span>
           <span class="stats-bar__dot">·</span>
           <span id="statBlank">沒有需要轉換的空白行</span>
+        </div>
+
+        <div id="threadsWarning" class="length-warning" role="status" hidden>
+          <span class="length-warning__icon" aria-hidden="true">⚠</span>
+          <span>
+            已超過 Threads 主貼文上限（<b>500</b> 字），貼文會被截斷或無法發布。
+            可改用 Threads 的「文字附件」功能，最多支援 <b>10,000</b> 字的長文。
+          </span>
         </div>
 
         <div class="options-panel">
@@ -136,10 +144,18 @@
     </main>
 
     <div class="footnote">
-      <span>🔒 文字只在裝置內處理</span>
+      <span>🔒 文字只在裝置內處理，不上傳伺服器</span>
       <span>⚡ 免登入・免安裝即可用</span>
       <span>📶 支援離線 PWA</span>
     </div>
+
+    <section id="historyPanel" class="history-panel" hidden>
+      <div class="history-panel__head">
+        <h2 class="panel__label">最近轉換記錄</h2>
+        <button id="clearHistoryBtn" class="btn--ghost">清除全部</button>
+      </div>
+      <ul id="historyList" class="history-list"></ul>
+    </section>
 
     <section id="faq" class="faq" hidden>
       <h2>常見問題</h2>
@@ -161,7 +177,7 @@
 
       <details>
         <summary>我的文字會被上傳嗎？</summary>
-        <p>不會。所有文字處理皆在瀏覽器本機完成。</p>
+        <p>不會。所有文字處理皆在瀏覽器本機完成，最近 10 筆轉換記錄也只存在你瀏覽器的本機儲存空間（localStorage），不會傳送到任何伺服器。你可以隨時按「清除全部」刪除記錄。</p>
       </details>
 
       <details>
