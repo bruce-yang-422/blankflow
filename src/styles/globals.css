@@ -583,7 +583,16 @@ body {
   padding: 10px 12px;
 }
 
-/* Length warning (platform character limits) */
+/* Length warnings (platform character limits) */
+.length-warning-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .length-warning {
   display: flex;
   align-items: flex-start;
@@ -595,6 +604,12 @@ body {
   border: 1px solid var(--warn-line);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
+}
+
+.length-warning--info {
+  color: var(--ink-soft);
+  background: var(--line-soft);
+  border-color: var(--line);
 }
 
 .length-warning__icon {

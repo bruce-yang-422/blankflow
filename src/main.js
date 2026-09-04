@@ -14,7 +14,7 @@ const resultActionBar = document.getElementById("resultActionBar");
 const statChars = document.getElementById("statChars");
 const statLines = document.getElementById("statLines");
 const statBlank = document.getElementById("statBlank");
-const threadsWarning = document.getElementById("threadsWarning");
+const lengthWarnings = document.getElementById("lengthWarnings");
 
 const optBlankLines = document.getElementById("optBlankLines");
 const optChineseSpacing = document.getElementById("optChineseSpacing");
@@ -38,7 +38,31 @@ const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 
 const OPTIONS_KEY = "blankflow.options";
 const ZWSP_RE = /\u200B/g;
-const THREADS_MAIN_POST_LIMIT = 500;
+
+// \u5404\u793E\u7FA4\u5E73\u53F0\u7684\u6587\u5B57\u9577\u5EA6\u9650\u5236\uFF0F\u6298\u758A\u9580\u6ABB
+const PLATFORM_LENGTH_RULES = [
+  {
+    id: "facebook",
+    tone: "info",
+    threshold: 477,
+    message: (limit) =>
+      `\u8CBC\u6587\u8D85\u904E\u7D04 <b>${limit}</b> \u5B57\u5F8C\uFF0CFacebook \u52D5\u614B\u7246\u6703\u6298\u758A\u986F\u793A\u300C\u67E5\u770B\u66F4\u591A\u300D\uFF0C\u9700\u8981\u8B80\u8005\u984D\u5916\u9EDE\u64CA\u624D\u80FD\u770B\u5230\u5168\u6587\u3002`,
+  },
+  {
+    id: "threads",
+    tone: "warn",
+    threshold: 500,
+    message: (limit) =>
+      `\u5DF2\u8D85\u904E Threads \u4E3B\u8CBC\u6587\u4E0A\u9650\uFF08<b>${limit}</b> \u5B57\uFF09\uFF0C\u8CBC\u6587\u6703\u88AB\u622A\u65B7\u6216\u7121\u6CD5\u767C\u5E03\u3002\u53EF\u6539\u7528 Threads \u7684\u300C\u6587\u5B57\u9644\u4EF6\u300D\u529F\u80FD\uFF0C\u6700\u591A\u652F\u63F4 <b>10,000</b> \u5B57\u7684\u9577\u6587\u3002`,
+  },
+  {
+    id: "instagram",
+    tone: "warn",
+    threshold: 2200,
+    message: (limit) =>
+      `\u5DF2\u8D85\u904E Instagram \u8CBC\u6587\u5167\u6587\u4E0A\u9650\uFF08<b>${limit}</b> \u5B57\uFF09\uFF0C\u53EF\u80FD\u7121\u6CD5\u767C\u5E03\u3002\u82E5\u5167\u6587\u5305\u542B\u7DB2\u5740\uFF0C\u5BE6\u969B\u4E0A\u9650\u53EF\u80FD\u7565\u4F4E\uFF08\u7D04 2,190 \u5B57\uFF09\u3002`,
+  },
+];
 
 let currentOutput = "";
 let hasConvertedOnce = false;
@@ -70,6 +94,29 @@ function saveOptions() {
   }
 }
 
+function renderLengthWarnings(characters) {
+  const triggered = PLATFORM_LENGTH_RULES.filter((rule) => characters > rule.threshold);
+
+  lengthWarnings.innerHTML = "";
+  lengthWarnings.hidden = triggered.length === 0;
+
+  triggered.forEach((rule) => {
+    const item = document.createElement("li");
+    item.className = `length-warning${rule.tone === "info" ? " length-warning--info" : ""}`;
+
+    const icon = document.createElement("span");
+    icon.className = "length-warning__icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = rule.tone === "info" ? "ℹ" : "⚠";
+
+    const text = document.createElement("span");
+    text.innerHTML = rule.message(rule.threshold);
+
+    item.append(icon, text);
+    lengthWarnings.appendChild(item);
+  });
+}
+
 function updateStats() {
   const value = inputText.value;
   const stats = getTextStatistics(value);
@@ -79,7 +126,7 @@ function updateStats() {
   statBlank.innerHTML =
     stats.blankLines > 0 ? `<b>${stats.blankLines}</b> 個空白行` : "沒有需要轉換的空白行";
 
-  threadsWarning.hidden = stats.characters <= THREADS_MAIN_POST_LIMIT;
+  renderLengthWarnings(stats.characters);
 
   convertBtn.disabled = value.trim() === "";
 }
