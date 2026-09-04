@@ -1,4 +1,4 @@
-const CACHE_VERSION = "blankflow-v2";
+const CACHE_VERSION = "blankflow-v3";
 
 const APP_SHELL = [
   "./",

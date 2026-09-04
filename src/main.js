@@ -67,10 +67,10 @@ function updateStats() {
   const value = inputText.value;
   const stats = getTextStatistics(value);
 
-  statChars.textContent = `${stats.characters} 字`;
-  statLines.textContent = `${stats.lines} 行`;
-  statBlank.textContent =
-    stats.blankLines > 0 ? `${stats.blankLines} 個空白行` : "沒有需要轉換的空白行";
+  statChars.innerHTML = `<b>${stats.characters}</b> 字`;
+  statLines.innerHTML = `<b>${stats.lines}</b> 行`;
+  statBlank.innerHTML =
+    stats.blankLines > 0 ? `<b>${stats.blankLines}</b> 個空白行` : "沒有需要轉換的空白行";
 
   convertBtn.disabled = value.trim() === "";
 }
@@ -260,7 +260,7 @@ function showUpdatePrompt(registration) {
   label.textContent = "有新版可以使用　";
   const btn = document.createElement("button");
   btn.textContent = "立即更新";
-  btn.className = "btn btn--ghost";
+  btn.className = "btn--ghost";
   btn.style.marginLeft = "8px";
   btn.addEventListener("click", () => {
     registration.waiting?.postMessage({ type: "SKIP_WAITING" });
@@ -275,7 +275,48 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+// Theme switch (light / system / dark)
+const THEME_KEY = "blankflow.theme";
+const themeButtons = document.querySelectorAll("[data-theme-choice]");
+
+function applyTheme(choice) {
+  if (choice === "light" || choice === "dark") {
+    document.documentElement.setAttribute("data-theme", choice);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+
+  themeButtons.forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.themeChoice === choice));
+  });
+}
+
+function loadTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) || "light";
+  } catch {
+    return "light";
+  }
+}
+
+function saveTheme(choice) {
+  try {
+    localStorage.setItem(THEME_KEY, choice);
+  } catch {
+    // storage unavailable, ignore
+  }
+}
+
+themeButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const choice = btn.dataset.themeChoice;
+    applyTheme(choice);
+    saveTheme(choice);
+  });
+});
+
 // Init
 loadOptions();
 updateStats();
 updateOnlineStatus();
+applyTheme(loadTheme());
