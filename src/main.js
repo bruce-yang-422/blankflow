@@ -3,6 +3,30 @@ import { processText } from "./core/processText.js";
 import { copyText } from "./core/clipboard.js";
 import { loadHistory, addHistoryEntry, clearHistory, removeHistoryEntry } from "./core/history.js";
 
+import { PLATFORM_MODES, getPlatform, getPlatformPreset, getPlatformFeedback, getCharacterLimitState } from "./core/platforms.js";
+
+const platformMode = { value: "general" };
+const platformSegments = document.getElementById("platformMode");
+const resetPlatformPreset = document.getElementById("resetPlatformPreset");
+for (const mode of PLATFORM_MODES) {
+  const label = document.createElement("label");
+  label.className = "platform-segment";
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.name = "platform";
+  radio.value = mode.id;
+  radio.checked = mode.id === platformMode.value;
+  const text = document.createElement("span");
+  text.textContent = mode.name;
+  label.append(radio, text);
+  platformSegments.appendChild(label);
+  radio.addEventListener("change", () => {
+    if (!radio.checked) return;
+    platformMode.value = radio.value;
+    applyPlatformPreset();
+  });
+}
+
 const inputText = document.getElementById("inputText");
 const outputText = document.getElementById("outputText");
 const resultWrap = document.getElementById("resultWrap");
@@ -18,7 +42,8 @@ const lengthWarnings = document.getElementById("lengthWarnings");
 
 const optBlankLines = document.getElementById("optBlankLines");
 const optChineseSpacing = document.getElementById("optChineseSpacing");
-const optWidthConversion = document.getElementById("optWidthConversion");
+const optWidthConversion = { value: "none" };
+const widthRadios = document.querySelectorAll("input[name=widthConversion]");
 const optRememberInput = document.getElementById("optRememberInput");
 const optShowInvisible = document.getElementById("optShowInvisible");
 
@@ -43,32 +68,6 @@ const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 const OPTIONS_KEY = "blankflow.options";
 const ZWSP_RE = /\u200B/g;
 
-// \u5404\u793E\u7FA4\u5E73\u53F0\u7684\u6587\u5B57\u9577\u5EA6\u9650\u5236\uFF0F\u6298\u758A\u63D0\u9192
-// threshold \u70BA null \u8868\u793A\u4E0D\u4F9D\u5B57\u6578\u5224\u65B7\uFF0C\u53EA\u8981\u6709\u5167\u5BB9\u5C31\u56FA\u5B9A\u986F\u793A
-const PLATFORM_LENGTH_RULES = [
-  {
-    id: "facebook",
-    tone: "info",
-    threshold: null,
-    message: () =>
-      `Facebook \u52D5\u614B\u7246\u53EF\u80FD\u6703\u6298\u758A\u8CBC\u6587\u986F\u793A\u300C\u67E5\u770B\u66F4\u591A\u300D\uFF0C\u6298\u758A\u9EDE\u4F9D\u88DD\u7F6E\u8207\u7248\u9762\u800C\u7570\u3001\u7121\u6CD5\u6E96\u78BA\u9810\u6E2C\uFF0C\u5EFA\u8B70\u767C\u5E03\u524D\u5148\u9810\u89BD\u78BA\u8A8D\u3002`,
-  },
-  {
-    id: "threads",
-    tone: "warn",
-    threshold: 500,
-    message: (limit) =>
-      `\u5DF2\u8D85\u904E Threads \u4E3B\u8CBC\u6587\u4E0A\u9650\uFF08<b>${limit}</b> \u5B57\uFF09\uFF0C\u8CBC\u6587\u6703\u88AB\u622A\u65B7\u6216\u7121\u6CD5\u767C\u5E03\u3002\u53EF\u6539\u7528 Threads \u7684\u300C\u6587\u5B57\u9644\u4EF6\u300D\u529F\u80FD\uFF0C\u6700\u591A\u652F\u63F4 <b>10,000</b> \u5B57\u7684\u9577\u6587\u3002`,
-  },
-  {
-    id: "instagram",
-    tone: "warn",
-    threshold: 2200,
-    message: (limit) =>
-      `\u5DF2\u8D85\u904E Instagram \u8CBC\u6587\u5167\u6587\u4E0A\u9650\uFF08<b>${limit}</b> \u5B57\uFF09\uFF0C\u53EF\u80FD\u7121\u6CD5\u767C\u5E03\u3002\u82E5\u5167\u6587\u5305\u542B\u7DB2\u5740\uFF0C\u5BE6\u969B\u4E0A\u9650\u53EF\u80FD\u7565\u4F4E\uFF08\u7D04 2,190 \u5B57\uFF09\u3002`,
-  },
-];
-
 const REMEMBERED_INPUT_KEY = "blankflow.rememberedInput";
 
 let currentOutput = "";
@@ -81,6 +80,7 @@ function loadOptions() {
     const raw = localStorage.getItem(OPTIONS_KEY);
     if (!raw) return;
     const saved = JSON.parse(raw);
+    platformMode.value = getPlatform(saved.platform).id;
     if (typeof saved.blankLines === "boolean") optBlankLines.checked = saved.blankLines;
     if (typeof saved.chineseSpacing === "boolean") optChineseSpacing.checked = saved.chineseSpacing;
     if (typeof saved.widthConversion === "string") optWidthConversion.value = saved.widthConversion;
@@ -99,6 +99,7 @@ function saveOptions() {
         chineseSpacing: optChineseSpacing.checked,
         widthConversion: optWidthConversion.value,
         rememberInput: optRememberInput.checked,
+        platform: platformMode.value,
       })
     );
   } catch {
@@ -128,30 +129,71 @@ function saveRememberedInput() {
   }
 }
 
-function renderLengthWarnings(characters) {
-  const triggered = PLATFORM_LENGTH_RULES.filter((rule) =>
-    rule.threshold === null ? characters > 0 : characters > rule.threshold
-  );
+function readConversionOptions() {
+  return {
+    blankLines: optBlankLines.checked,
+    chineseSpacing: optChineseSpacing.checked,
+    widthConversion: optWidthConversion.value,
+    platform: platformMode.value,
+  };
+}
 
-  lengthWarnings.innerHTML = "";
-  lengthWarnings.hidden = triggered.length === 0;
+function renderPlatform() {
+  if (!["none", "toHalfwidth", "toFullwidth"].includes(optWidthConversion.value)) {
+    optWidthConversion.value = "none";
+  }
+  widthRadios.forEach(radio => {
+    radio.checked = radio.value === optWidthConversion.value;
+  });
+  const mode = getPlatform(platformMode.value);
+  platformSegments.querySelectorAll("input").forEach(radio => {
+    radio.checked = radio.value === mode.id;
+  });
+  const preset = getPlatformPreset(mode.id);
+  const options = readConversionOptions();
+  const customized = Object.keys(preset).some(key => preset[key] !== options[key]);
+  resetPlatformPreset.hidden = !customized;
+}
 
-  if (triggered.length === 0) return;
+function invalidateResult() {
+  renderOutput("");
+  conversionSummary.hidden = true;
+  conversionSummary.textContent = "";
+  undoSnapshot = null;
+  undoBtn.disabled = true;
+}
 
-  const isWarn = triggered.some((rule) => rule.tone === "warn");
-  const item = document.createElement("li");
-  item.className = `length-warning${isWarn ? "" : " length-warning--info"}`;
+function applyPlatformPreset() {
+  const preset = getPlatformPreset(platformMode.value);
+  optBlankLines.checked = preset.blankLines;
+  optChineseSpacing.checked = preset.chineseSpacing;
+  optWidthConversion.value = preset.widthConversion;
+  handleOptionsChange();
+}
 
-  const icon = document.createElement("span");
-  icon.className = "length-warning__icon";
-  icon.setAttribute("aria-hidden", "true");
-  icon.textContent = isWarn ? "⚠" : "ℹ";
+function handleOptionsChange() {
+  saveOptions();
+  renderPlatform();
+  invalidateResult();
+  updateStats();
+}
 
-  const text = document.createElement("span");
-  text.innerHTML = triggered.map((rule) => rule.message(rule.threshold)).join(" ");
-
-  item.append(icon, text);
-  lengthWarnings.appendChild(item);
+function renderLengthWarnings(value, source = "原文") {
+  const feedback = getPlatformFeedback(platformMode.value, value);
+  lengthWarnings.replaceChildren();
+  lengthWarnings.hidden = feedback.length === 0;
+  for (const entry of feedback) {
+    const item = document.createElement("li");
+    item.className = `length-warning${entry.tone === "warn" ? "" : " length-warning--info"}`;
+    const icon = document.createElement("span");
+    icon.className = "length-warning__icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = entry.tone === "warn" ? "⚠" : "ℹ";
+    const text = document.createElement("span");
+    text.textContent = `${source}・${entry.message}`;
+    item.append(icon, text);
+    lengthWarnings.appendChild(item);
+  }
 }
 
 function updateStats() {
@@ -159,11 +201,22 @@ function updateStats() {
   const stats = getTextStatistics(value);
 
   statChars.innerHTML = `<b>${stats.characters}</b> 字`;
+  const limitState = getCharacterLimitState(platformMode.value, stats.characters);
+  const limitLabels = { neutral: "", normal: "範圍內", near: "接近上限", exceeded: "超出上限" };
+  statChars.dataset.limitState = limitState;
+  statChars.title = `原文字數${limitLabels[limitState] ? `：${limitLabels[limitState]}（平台參考門檻）` : ""}`;
+  if (limitState === "near" || limitState === "exceeded") {
+    const label = document.createElement("span");
+    label.className = "stat-limit-label";
+    label.textContent = limitLabels[limitState];
+    statChars.appendChild(label);
+  }
+
   statLines.innerHTML = `<b>${stats.lines}</b> 行`;
   statBlank.innerHTML =
     stats.blankLines > 0 ? `<b>${stats.blankLines}</b> 個空白行` : "沒有需要轉換的空白行";
 
-  renderLengthWarnings(stats.characters);
+  renderLengthWarnings(value);
 
   convertBtn.disabled = value.trim() === "";
   saveRememberedInput();
@@ -171,6 +224,7 @@ function updateStats() {
 
 function renderOutput(text) {
   currentOutput = text;
+  renderLengthWarnings(text || inputText.value, text ? "轉換結果" : "原文");
 
   const hasContent = text.length > 0;
   resultPanel.classList.toggle("is-empty", !hasContent);
@@ -203,17 +257,13 @@ function handleConvert() {
   undoSnapshot = { input: value, output: currentOutput };
   undoBtn.disabled = false;
 
-  const options = {
-    blankLines: optBlankLines.checked,
-    chineseSpacing: optChineseSpacing.checked,
-    widthConversion: optWidthConversion.value,
-  };
+  const options = readConversionOptions();
 
   const { text, report } = processText(value, options);
 
   renderOutput(text);
 
-  const lines = [];
+  const lines = [`✓ ${getPlatform(platformMode.value).name}模式轉換完成`];
   if (options.widthConversion !== "none" && report.convertedWidth > 0) {
     const label = options.widthConversion === "toHalfwidth" ? "全形轉半形" : "半形轉全形";
     lines.push(`✓ 已${label} ${report.convertedWidth} 個字元`);
@@ -297,9 +347,16 @@ async function handleShare() {
 
 inputText.addEventListener("input", updateStats);
 
-optBlankLines.addEventListener("change", saveOptions);
-optChineseSpacing.addEventListener("change", saveOptions);
-optWidthConversion.addEventListener("change", saveOptions);
+resetPlatformPreset.addEventListener("click", applyPlatformPreset);
+optBlankLines.addEventListener("change", handleOptionsChange);
+optChineseSpacing.addEventListener("change", handleOptionsChange);
+widthRadios.forEach(radio => {
+  radio.addEventListener("change", () => {
+    if (!radio.checked) return;
+    optWidthConversion.value = radio.value;
+    handleOptionsChange();
+  });
+});
 
 optRememberInput.addEventListener("change", () => {
   saveOptions();
@@ -456,9 +513,9 @@ function restoreHistoryEntry(entry) {
   inputText.value = entry.input;
   optBlankLines.checked = entry.options.blankLines;
   optChineseSpacing.checked = entry.options.chineseSpacing;
-  if (entry.options.widthConversion) {
-    optWidthConversion.value = entry.options.widthConversion;
-  }
+  optWidthConversion.value = entry.options.widthConversion || "none";
+  platformMode.value = getPlatform(entry.options.platform).id;
+  renderPlatform();
   saveOptions();
   updateStats();
   renderOutput(entry.output);
@@ -494,7 +551,7 @@ function renderHistory() {
 
     const meta = document.createElement("span");
     meta.className = "history-item__meta";
-    meta.textContent = formatHistoryTime(entry.createdAt);
+    meta.textContent = `${formatHistoryTime(entry.createdAt)} · ${getPlatform(entry.options.platform).name}`;
 
     body.append(preview, meta);
     body.addEventListener("click", () => restoreHistoryEntry(entry));
@@ -521,6 +578,7 @@ clearHistoryBtn.addEventListener("click", () => {
 
 // Init
 loadOptions();
+renderPlatform();
 loadRememberedInput();
 updateStats();
 updateOnlineStatus();

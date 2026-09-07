@@ -2,7 +2,7 @@ const HISTORY_KEY = "blankflow.history";
 const MAX_ENTRIES = 10;
 
 /**
- * @typedef {{ id: string, createdAt: number, input: string, output: string, options: { blankLines: boolean, chineseSpacing: boolean } }} HistoryEntry
+ * @typedef {{ id: string, createdAt: number, input: string, output: string, options: { blankLines: boolean, chineseSpacing: boolean, widthConversion?: string, platform?: string } }} HistoryEntry
  */
 
 /** @returns {HistoryEntry[]} */
@@ -27,7 +27,7 @@ function saveHistory(entries) {
 
 /**
  * Adds a new entry to the front of history, capped at MAX_ENTRIES.
- * @param {{ input: string, output: string, options: { blankLines: boolean, chineseSpacing: boolean } }} entry
+ * @param {{ input: string, output: string, options: { blankLines: boolean, chineseSpacing: boolean, widthConversion?: string, platform?: string } }} entry
  * @returns {HistoryEntry[]} the updated list
  */
 export function addHistoryEntry(entry) {

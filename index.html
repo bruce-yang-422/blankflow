@@ -53,8 +53,15 @@
 
     <section class="hero">
       <span class="hero__trust">只在本機儲存・不上傳伺服器</span>
-      <h1 class="hero__title">讓社群貼文的空白行，<em>不再被吃掉</em>。</h1>
-      <p class="hero__subtitle">貼上文字，一鍵嵌入零寬度字元。Facebook、Instagram、Threads 貼文排版更乾淨，複製即可用。最近 10 筆轉換記錄會留在瀏覽器裡，方便你隨時回頭找。</p>
+      <h1 class="hero__title"><span>讓社群貼文的空白行，</span><em>不再被吃掉。</em></h1>
+      <p class="hero__subtitle"><span class="hero__desktop-copy">貼上文字，一鍵嵌入零寬度字元。Facebook、Instagram、Threads 貼文排版更乾淨，複製即可用。最近 10 筆轉換記錄會留在瀏覽器裡，方便你隨時回頭找。</span><span class="hero__mobile-copy">貼上、排版、複製，保留每個空白行。<br />最近 10 筆記錄只存在這台裝置。</span></p>
+    </section>
+
+    <section class="platform-panel" aria-label="平台排版設定">
+      <fieldset class="platform-picker" aria-label="社群平台模式">
+        <div id="platformMode" class="platform-segments"></div>
+      </fieldset>
+      <button id="resetPlatformPreset" type="button" class="btn--ghost" hidden>套用平台預設</button>
     </section>
 
     <main class="tool-layout">
@@ -99,23 +106,29 @@
               <span class="option__desc">例如「使用ChatGPT寫3篇」→「使用 ChatGPT 寫 3 篇」。</span>
             </span>
           </label>
-          <label class="option option--select">
-            <span class="option__text">
-              <span class="option__title">全形／半形轉換</span>
-              <span class="option__desc">例如「ＡＢＣ１２３」→「ABC123」。</span>
-            </span>
-            <select id="optWidthConversion" class="select">
-              <option value="none">不轉換</option>
-              <option value="toHalfwidth">全形轉半形</option>
-              <option value="toFullwidth">半形轉全形</option>
-            </select>
-          </label>
-          <label class="option">
-            <input type="checkbox" id="optRememberInput" />
-            <span class="option__text">
-              <span class="option__title">記住上次輸入內容</span>
-              <span class="option__desc">下次開啟時自動帶回目前輸入的文字。</span>
-            </span>
+          <div class="width-option" role="group" aria-labelledby="widthLabel">
+            <div class="width-option__label">
+              <svg class="width-option__icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 5v10M17 5v10M5 10h10M7 7l-3 3 3 3M13 7l3 3-3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span id="widthLabel" class="option__title">全形／半形</span>
+            </div>
+            <div id="optWidthConversion" class="platform-segments width-segments">
+              <label class="platform-segment" title="保留原本的字元寬度">
+                <input type="radio" name="widthConversion" value="none" aria-label="不轉換" checked />
+                <span>原樣</span>
+              </label>
+              <label class="platform-segment" title="全形轉半形，例如 ＡＢＣ → ABC">
+                <input type="radio" name="widthConversion" value="toHalfwidth" aria-label="全形轉半形" />
+                <span>半形</span>
+              </label>
+              <label class="platform-segment" title="半形轉全形，例如 ABC → ＡＢＣ">
+                <input type="radio" name="widthConversion" value="toFullwidth" aria-label="半形轉全形" />
+                <span>全形</span>
+              </label>
+            </div>
+          </div>
+          <label class="remember-option" title="下次開啟時自動帶回目前輸入的文字。">
+            <span>記住上次輸入</span>
+            <input type="checkbox" id="optRememberInput" role="switch" aria-description="下次開啟時自動帶回目前輸入的文字。" />
           </label>
         </div>
 
@@ -206,7 +219,12 @@
 
       <details>
         <summary>為什麼會出現平台字數提示？</summary>
-        <p>提醒 Facebook、Threads、Instagram 的貼文長度限制或折疊風險，僅供參考，實際規則以各平台當下顯示為準。</p>
+        <p>選擇平台後只顯示對應提示，通用模式則保留Facebook 折疊提醒。輸入時統計原文，轉換後檢查結果；字數包含空白與換行，僅供參考，實際規則以平台當下顯示為準。</p>
+      </details>
+
+      <details>
+        <summary>切換平台會改變什麼？</summary>
+        <p>切換平台會帶入本工具的排版預設，清除舊結果，原始文字保持不變。你仍可調整選項，再按「立即轉換」。WordPress 預設只整理中英數間距，不加入零寬字元；平台選擇與調整後的選項會保存在本機。</p>
       </details>
 
       <details>

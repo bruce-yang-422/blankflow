@@ -13,6 +13,8 @@ import { optimizeChineseSpacing } from "../src/core/chineseSpacing.js";
 import { countVisibleCharacters } from "../src/core/characterCount.js";
 import { loadHistory, addHistoryEntry, clearHistory, removeHistoryEntry } from "../src/core/history.js";
 import { toHalfwidth, toFullwidth } from "../src/core/widthConversion.js";
+import { getPlatform, getPlatformPreset, getPlatformFeedback, getCharacterLimitState } from "../src/core/platforms.js";
+import { processText } from "../src/core/processText.js";
 
 let pass = 0;
 let fail = 0;
@@ -95,6 +97,39 @@ assertEqual(toFullwidth("ABC123").text, "ＡＢＣ１２３", "halfwidth latin/d
 assertEqual(toFullwidth("!@#").text, "！＠＃", "halfwidth symbols to fullwidth");
 assertEqual(toFullwidth("A B").text, "Ａ　Ｂ", "halfwidth space to fullwidth space");
 assertEqual(toFullwidth("中文不受影響").text, "中文不受影響", "CJK untouched by toFullwidth");
+
+// Platform presets exercise the full pipeline, not only configuration values.
+const platformInput = "使用ChatGPT\n\n第3篇";
+assertEqual(getPlatform("facebook").id, "general", "legacy Facebook mode maps to general");
+for (const mode of ["instagram", "threads"]) {
+  assertEqual(processText(platformInput, getPlatformPreset(mode)).text, "使用ChatGPT\n\u200B\n第3篇", `${mode} preserves original spacing`);
+}
+assertEqual(processText(platformInput, getPlatformPreset("wordpress")).text, "使用 ChatGPT\n\n第 3 篇", "WordPress uses ordinary paragraph breaks");
+assertEqual(getPlatform("unknown").id, "general", "unknown saved platform falls back to general");
+assertEqual(getPlatform(undefined).id, "general", "legacy history without platform falls back to general");
+assertEqual(getPlatformFeedback("threads", "").length, 0, "empty input has no warning");
+assertEqual(getPlatformFeedback("threads", "a".repeat(500))[0].tone, "info", "Threads exact threshold is not over limit");
+assertEqual(getPlatformFeedback("threads", "a".repeat(501))[0].tone, "warn", "Threads above threshold warns");
+assertEqual(getPlatformFeedback("instagram", "a".repeat(2200))[0].tone, "info", "Instagram exact threshold is not over limit");
+assertEqual(getPlatformFeedback("instagram", "a".repeat(2201))[0].tone, "warn", "Instagram above threshold warns");
+assertEqual(getPlatformFeedback("wordpress", "a".repeat(3000)).some(item => item.tone === "warn"), false, "WordPress has no arbitrary social limit");
+assertEqual(getPlatformFeedback("general", "短貼文")[0].message.startsWith("Facebook："), true, "general retains Facebook guidance");
+assertEqual(getPlatformFeedback("general", "a".repeat(3000)).length, 1, "general long text only shows its own guidance");
+assertEqual(getPlatformFeedback("general", "a".repeat(3000)).some(item => /Instagram|Threads|WordPress/.test(item.message)), false, "general excludes other platform guidance");
+const nearLimit = "a".repeat(497) + "\n\n乙";
+const convertedNearLimit = processText(nearLimit, getPlatformPreset("threads")).text;
+assertEqual(getPlatformFeedback("threads", nearLimit)[0].tone, "info", "input at threshold before conversion");
+assertEqual(getPlatformFeedback("threads", convertedNearLimit)[0].tone, "warn", "inserted ZWSP is included in output count");
+addHistoryEntry({ input: platformInput, output: platformInput, options: { ...getPlatformPreset("wordpress"), platform: "wordpress" } });
+assertEqual(loadHistory()[0].options.platform, "wordpress", "history retains platform");
+clearHistory();
+
+for (const [mode, count, expected] of [
+  ["threads", 0, "neutral"], ["threads", 449, "normal"],
+  ["threads", 450, "near"], ["threads", 500, "near"], ["threads", 501, "exceeded"],
+  ["instagram", 1980, "near"], ["instagram", 2201, "exceeded"],
+  ["general", 3000, "neutral"], ["wordpress", 3000, "neutral"],
+]) assertEqual(getCharacterLimitState(mode, count), expected, `${mode} counter status at ${count}`);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);
