@@ -262,6 +262,10 @@ function handleConvert() {
   const { text, report } = processText(value, options);
 
   renderOutput(text);
+  if (window.matchMedia("(max-width: 639px)").matches) {
+    inputText.value = text;
+    updateStats();
+  }
 
   const lines = [`✓ ${getPlatform(platformMode.value).name}模式轉換完成`];
   if (options.widthConversion !== "none" && report.convertedWidth > 0) {
@@ -319,21 +323,26 @@ function handleClear() {
 }
 
 async function handleCopy() {
+  if (window.matchMedia("(max-width: 639px)").matches) {
+    currentOutput = inputText.value;
+  }
   if (!currentOutput) return;
 
   const result = await copyText(currentOutput);
   if (result.ok) {
     showToast("✓ 已複製到剪貼簿");
   } else {
-    outputText.removeAttribute("readonly");
-    outputText.focus();
-    outputText.select();
-    outputText.setAttribute("readonly", "true");
+    const field = window.matchMedia("(max-width: 639px)").matches ? inputText : outputText;
+    field.focus();
+    field.select();
     showToast("無法自動複製，請長按／全選結果後手動複製。", 4000);
   }
 }
 
 async function handleShare() {
+  if (window.matchMedia("(max-width: 639px)").matches) {
+    currentOutput = inputText.value;
+  }
   if (!currentOutput || !navigator.share) return;
 
   try {

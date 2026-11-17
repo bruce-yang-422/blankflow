@@ -992,6 +992,26 @@ body {
   line-height: 1.5;
 }
 
+/* Dense spacing throughout the workspace. */
+.header { padding-bottom: 16px; margin-bottom: 12px; }
+.hero { padding-bottom: 16px; }
+.hero__title { font-size: 30px; margin-bottom: 8px; }
+.hero__subtitle { font-size: 13px; line-height: 1.5; }
+.platform-panel { margin-bottom: 10px; }
+.panel { padding: 16px; gap: 10px; }
+.textarea { min-height: 170px; padding: 10px 12px; line-height: 1.6; }
+.option { padding-block: 6px; gap: 8px; }
+.width-option { padding-block: 6px; gap: 6px; }
+.remember-option { padding-block: 7px; margin-top: 4px; }
+.btn { padding: 9px 12px; }
+.footnote { padding-top: 12px; gap: 6px; }
+@media (min-width: 640px) {
+  .panel { padding: 16px 18px; }
+}
+@media (min-width: 900px) {
+  .textarea { min-height: 220px; }
+}
+
 /* Compact mobile layout: brand, controls, then the editor. */
 .hero__mobile-copy { display: none; }
 .header__title, .header__actions > button { white-space: nowrap; }
@@ -1035,6 +1055,12 @@ body {
   #platformMode .platform-segment span { padding-inline: 5px; font-size: 11px; }
   .tool-layout { border-radius: 20px; }
   .panel { padding: 18px 16px; gap: 14px; }
+  .input-panel { border-bottom: 0; }
+  .result-panel { padding-top: 0; }
+  .result-panel > .panel__head,
+  #resultEmptyState,
+  #resultWrap,
+  #showInvisibleOption { display: none; }
   .onboarding { padding: 9px 10px; font-size: 11px; line-height: 1.7; }
   .textarea { min-height: 200px; padding: 12px 14px; font-size: 16px; line-height: 1.7; }
   .stats-bar { gap: 10px; }
@@ -1043,4 +1069,62 @@ body {
   .result-empty-state { min-height: 160px; padding: 24px 14px; }
   .footnote { padding-top: 22px; gap: 6px; font-size: 11px; }
   .history-panel, .faq { padding: 18px 16px; }
+}
+
+@media (max-width: 639px) {
+  .app { padding: 10px max(10px, env(safe-area-inset-right)) 20px max(10px, env(safe-area-inset-left)); }
+  .header { gap: 7px; padding-bottom: 12px; }
+  .header__title { font-size: 14px; }
+  .header__actions { gap: 5px; }
+  .header__actions > button { min-height: 32px; padding: 4px 9px; }
+  .hero { padding-bottom: 10px; }
+  .hero__trust { margin-bottom: 6px; }
+  .hero__title { font-size: 22px; margin-bottom: 6px; }
+  .hero__subtitle { font-size: 12px; line-height: 1.5; }
+  .platform-panel { margin-bottom: 8px; }
+  #platformMode .platform-segment span { min-height: 32px; padding-block: 5px; }
+  .tool-layout { border-radius: 14px; }
+  .panel { padding: 12px; gap: 9px; }
+  .result-panel { padding-top: 0; padding-bottom: 8px; }
+  .onboarding { padding: 6px 8px; font-size: 10px; line-height: 1.5; }
+  .textarea { min-height: 140px; padding: 9px 10px; font-size: 16px; line-height: 1.5; border-radius: 10px; }
+  .stats-bar { gap: 7px; font-size: 10px; }
+  .length-warning { padding: 7px 9px; font-size: 10px; }
+  .option { padding-block: 5px; }
+  .option__title { font-size: 12px; }
+  .option__desc { font-size: 10px; line-height: 1.4; }
+  .width-option { padding-block: 5px; }
+  .remember-option { padding-block: 6px; font-size: 11px; }
+  .btn { padding: 8px 10px; font-size: 12px; }
+  .footnote { padding-top: 10px; gap: 4px; font-size: 10px; }
+  .history-panel, .faq { padding: 12px; }
+}
+
+/* Keep the phone's primary workflow within a compact viewport. */
+@media (max-width: 639px) {
+  .app { padding-top: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .header { gap: 5px; padding-bottom: 8px; }
+  .hero, .onboarding, .option__desc, .footnote { display: none; }
+  .platform-panel { margin-bottom: 6px; }
+  .panel { padding: 10px; gap: 7px; }
+  .panel__head { min-height: 18px; }
+  .textarea {
+    height: clamp(100px, calc(100svh - 410px), 260px);
+    min-height: 100px;
+    padding: 8px 10px;
+  }
+  .options-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px 10px; }
+  .option { margin: 0; padding: 5px 0; gap: 6px; align-items: center; }
+  .option input { margin-top: 0; }
+  .option__title { font-size: 11px; line-height: 1.4; }
+  .width-option, .remember-option { grid-column: 1 / -1; }
+  .width-option { padding: 2px 0; }
+  .remember-option { min-height: 28px; padding: 3px 0; margin-top: 0; }
+  .length-warning-list { margin: 0; }
+  .length-warning { padding: 5px 7px; line-height: 1.4; }
+  .result-panel { padding: 0 10px 8px; gap: 5px; }
+  .result-panel.is-empty { padding-bottom: 0; }
+  .summary { padding: 5px 7px; font-size: 10px; }
+  .action-bar { gap: 5px; }
+  .btn { min-height: 34px; padding: 6px 9px; }
 }
