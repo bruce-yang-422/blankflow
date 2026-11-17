@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://blankflow.stack-base.com/sitemap.xml

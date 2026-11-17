@@ -6,32 +6,108 @@
   <title>空白換行轉換器｜Facebook・IG・Threads 貼文空白行工具</title>
   <meta name="description" content="免費空白換行轉換器，在空白行加入零寬度字元，避免 Facebook、Instagram、Threads 貼文換行被壓縮。免登入、文字不上傳、支援 PWA 離線使用。" />
   <meta name="theme-color" content="#F7F8FC" />
-  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="author" content="Bruce Yang" />
+  <meta name="application-name" content="空白換行轉換器" />
+  <meta name="apple-mobile-web-app-title" content="BlankFlow" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="canonical" href="https://blankflow.stack-base.com/" />
+  <link rel="alternate" hreflang="zh-TW" href="https://blankflow.stack-base.com/" />
+  <link rel="alternate" hreflang="x-default" href="https://blankflow.stack-base.com/" />
+
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="zh_TW" />
-  <meta property="og:site_name" content="空白換行轉換器" />
+  <meta property="og:site_name" content="空白換行轉換器 BlankFlow" />
+  <meta property="og:url" content="https://blankflow.stack-base.com/" />
   <meta property="og:title" content="空白換行轉換器｜Facebook・IG・Threads 貼文空白行工具" />
   <meta property="og:description" content="免費保留 Facebook、Instagram、Threads 貼文空白行，支援中英數自動加空格與全半形轉換。免登入、文字不上傳，可離線使用。" />
+  <meta property="og:image" content="https://blankflow.stack-base.com/icons/pwa-512.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:alt" content="空白換行轉換器 BlankFlow 圖示" />
+
+  <!-- Twitter / X -->
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="空白換行轉換器｜社群貼文排版工具" />
   <meta name="twitter:description" content="一鍵保留社群貼文空白行，支援中英數間距與全半形轉換。免費、免登入，文字只在本機處理。" />
+  <meta name="twitter:image" content="https://blankflow.stack-base.com/icons/pwa-512.png" />
+  <meta name="twitter:image:alt" content="空白換行轉換器 BlankFlow 圖示" />
+
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "空白換行轉換器",
-      "alternateName": "Blankflow",
-      "description": "免費社群貼文排版工具，保留 Facebook、Instagram、Threads 貼文空白行，支援中英數自動加空格與全半形轉換。",
-      "inLanguage": "zh-TW",
-      "applicationCategory": "UtilitiesApplication",
-      "operatingSystem": "Any",
-      "browserRequirements": "Requires JavaScript",
-      "isAccessibleForFree": true,
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "TWD"
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://blankflow.stack-base.com/#website",
+          "url": "https://blankflow.stack-base.com/",
+          "name": "空白換行轉換器",
+          "alternateName": "BlankFlow",
+          "inLanguage": "zh-TW"
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://blankflow.stack-base.com/#app",
+          "url": "https://blankflow.stack-base.com/",
+          "name": "空白換行轉換器",
+          "alternateName": "BlankFlow",
+          "description": "免費社群貼文排版工具，保留 Facebook、Instagram、Threads 貼文空白行，支援中英數自動加空格與全半形轉換。",
+          "image": "https://blankflow.stack-base.com/icons/pwa-512.png",
+          "inLanguage": "zh-TW",
+          "applicationCategory": "UtilitiesApplication",
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires JavaScript",
+          "isAccessibleForFree": true,
+          "featureList": [
+            "保留社群貼文空白行（零寬度空白字元 U+200B）",
+            "中文、英文與數字之間自動加空格",
+            "全形／半形字元轉換",
+            "Facebook、Instagram、Threads、WordPress 平台模式",
+            "字數、行數與空白行統計",
+            "PWA 離線使用"
+          ],
+          "author": {
+            "@type": "Person",
+            "name": "Bruce Yang"
+          },
+          "license": "https://opensource.org/licenses/MIT",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "TWD"
+          },
+          "isPartOf": { "@id": "https://blankflow.stack-base.com/#website" }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://blankflow.stack-base.com/#faq",
+          "inLanguage": "zh-TW",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "為什麼貼到社群後空白行會不見？",
+              "acceptedAnswer": { "@type": "Answer", "text": "部分平台會清理純空白行或重新正規化 whitespace。" }
+            },
+            {
+              "@type": "Question",
+              "name": "這個工具做了什麼？",
+              "acceptedAnswer": { "@type": "Answer", "text": "在原本完全空白的行中放入看不見的 U+200B 字元，使該行在字串層級不再是完全空白。" }
+            },
+            {
+              "@type": "Question",
+              "name": "我的文字會被上傳嗎？",
+              "acceptedAnswer": { "@type": "Answer", "text": "不會。所有文字處理皆在瀏覽器本機完成，最近 10 筆轉換記錄也只存在你瀏覽器的本機儲存空間（localStorage），不會傳送到任何伺服器。" }
+            },
+            {
+              "@type": "Question",
+              "name": "沒網路也可以用嗎？",
+              "acceptedAnswer": { "@type": "Answer", "text": "安裝 PWA 或曾載入網站資源後，核心轉換功能可離線使用。" }
+            }
+          ]
+        }
+      ]
     }
   </script>
 
@@ -247,7 +323,7 @@
 
       <details>
         <summary>為什麼會出現平台字數提示？</summary>
-        <p>選擇平台後只顯示對應提示，通用模式則保留Facebook 折疊提醒。輸入時統計原文，轉換後檢查結果；字數包含空白與換行，僅供參考，實際規則以平台當下顯示為準。</p>
+        <p>選擇平台後只顯示對應提示，通用模式則保留 Facebook 折疊提醒。輸入時統計原文，轉換後檢查結果；字數包含空白與換行，僅供參考，實際規則以平台當下顯示為準。</p>
       </details>
 
       <details>

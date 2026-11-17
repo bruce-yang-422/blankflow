@@ -123,6 +123,8 @@ blankflow/
 ├── index.html               # 主頁面與 SEO 中繼資料
 ├── manifest.webmanifest     # PWA 設定
 ├── sw.js                    # Service Worker 與離線快取
+├── robots.txt               # 搜尋引擎爬取規則
+├── sitemap.xml              # 網站地圖
 ├── CNAME                    # GitHub Pages 自訂網域
 ├── LICENSE
 └── package.json
